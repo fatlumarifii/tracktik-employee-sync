@@ -1,0 +1,512 @@
+{
+	"info": {
+		"_postman_id": "tracktik-employee-sync",
+		"name": "TrackTik Employee Sync API",
+		"description": "Test collection for TrackTik Employee Sync API with authentication, validation, and idempotency tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication Tests",
+			"item": [
+				{
+					"name": "1. No Auth Token (401)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emp_id\": \"P1_001\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"email_address\": \"test@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider1"
+							]
+						},
+						"description": "Should return 401 - API token is required"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Invalid Auth Token (401)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "invalid_token_12345",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emp_id\": \"P1_001\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"email_address\": \"test@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider1"
+							]
+						},
+						"description": "Should return 401 - Invalid API token"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Provider 1",
+			"item": [
+				{
+					"name": "1. Create Employee - Alice Johnson",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{provider1_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emp_id\": \"P1_001\",\n  \"first_name\": \"Alice\",\n  \"last_name\": \"Johnson\",\n  \"email_address\": \"alice.johnson@provider1.com\",\n  \"phone\": \"+1-555-0101\",\n  \"job_title\": \"Security Officer\",\n  \"dept\": \"Security Operations\",\n  \"hire_date\": \"2024-01-15\",\n  \"employment_status\": \"active\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider1"
+							]
+						},
+						"description": "Create Alice Johnson - should return 201"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Duplicate Employee - Idempotent (201)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{provider1_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emp_id\": \"P1_001\",\n  \"first_name\": \"Alice\",\n  \"last_name\": \"Johnson\",\n  \"email_address\": \"alice.johnson@provider1.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider1"
+							]
+						},
+						"description": "Send same employee again - should return existing record (idempotent)"
+					},
+					"response": []
+				},
+				{
+					"name": "3. Create Employee - Bob Smith",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{provider1_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emp_id\": \"P1_002\",\n  \"first_name\": \"Bob\",\n  \"last_name\": \"Smith\",\n  \"email_address\": \"bob.smith@provider1.com\",\n  \"phone\": \"+1-555-0102\",\n  \"job_title\": \"Supervisor\",\n  \"dept\": \"Security Operations\",\n  \"hire_date\": \"2023-11-20\",\n  \"employment_status\": \"active\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider1"
+							]
+						},
+						"description": "Create Bob Smith - should return 201"
+					},
+					"response": []
+				},
+				{
+					"name": "4. Missing Required Fields (422)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{provider1_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emp_id\": \"P1_003\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider1"
+							]
+						},
+						"description": "Missing required fields - should return 422 validation error"
+					},
+					"response": []
+				},
+				{
+					"name": "5. Invalid Email Format (422)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{provider1_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emp_id\": \"P1_004\",\n  \"first_name\": \"Invalid\",\n  \"last_name\": \"Email\",\n  \"email_address\": \"not-a-valid-email\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider1"
+							]
+						},
+						"description": "Invalid email format - should return 422 validation error"
+					},
+					"response": []
+				},
+				{
+					"name": "6. With Optional Fields",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{provider1_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emp_id\": \"P1_005\",\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Doe\",\n  \"email_address\": \"jane.doe@provider1.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider1"
+							]
+						},
+						"description": "Only required fields - optional fields omitted - should return 201"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Provider 2",
+			"item": [
+				{
+					"name": "1. Create Employee - Carol Davis",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{provider2_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employee_number\": \"P2_001\",\n  \"personal_info\": {\n    \"given_name\": \"Carol\",\n    \"family_name\": \"Davis\",\n    \"email\": \"carol.davis@provider2.com\",\n    \"mobile\": \"+1-555-0201\"\n  },\n  \"work_info\": {\n    \"role\": \"Security Guard\",\n    \"division\": \"Night Shift Security\",\n    \"start_date\": \"2024-02-01\",\n    \"current_status\": \"employed\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider2"
+							]
+						},
+						"description": "Create Carol Davis - should return 201"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Create Employee - David Wilson",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{provider2_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employee_number\": \"P2_002\",\n  \"personal_info\": {\n    \"given_name\": \"David\",\n    \"family_name\": \"Wilson\",\n    \"email\": \"david.wilson@provider2.com\",\n    \"mobile\": \"+1-555-0202\"\n  },\n  \"work_info\": {\n    \"role\": \"Team Lead\",\n    \"division\": \"Day Shift Security\",\n    \"start_date\": \"2023-12-15\",\n    \"current_status\": \"employed\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider2"
+							]
+						},
+						"description": "Create David Wilson - should return 201"
+					},
+					"response": []
+				},
+				{
+					"name": "3. Duplicate Employee - Idempotent (201)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{provider2_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employee_number\": \"P2_001\",\n  \"personal_info\": {\n    \"given_name\": \"Carol\",\n    \"family_name\": \"Davis\",\n    \"email\": \"carol.davis@provider2.com\"\n  },\n  \"work_info\": {\n    \"role\": \"Security Guard\",\n    \"division\": \"Night Shift Security\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider2"
+							]
+						},
+						"description": "Send same employee again - should return existing record (idempotent)"
+					},
+					"response": []
+				},
+				{
+					"name": "4. Missing Required Fields (422)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{provider2_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employee_number\": \"P2_003\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees/provider2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"employees",
+								"provider2"
+							]
+						},
+						"description": "Missing required fields - should return 422 validation error"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "provider1_token",
+			"value": "test_provider1_token_12345",
+			"type": "string"
+		},
+		{
+			"key": "provider2_token",
+			"value": "test_provider2_token_67890",
+			"type": "string"
+		}
+	]
+}
