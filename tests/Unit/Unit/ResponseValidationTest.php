@@ -13,7 +13,7 @@ class ResponseValidationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_throws_exception_on_missing_employee_id(): void
+    public function test_returns_failed_status_on_missing_employee_id(): void
     {
         // Mock service to return invalid response
         $mockService = $this->createMock(TrackTikApiService::class);
@@ -25,14 +25,14 @@ class ResponseValidationTest extends TestCase
 
         $action = new CreateEmployeeInTrackTikAction($mockService);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('TrackTik API returned invalid response format: missing employeeId');
-
-        $action->execute(
+        $result = $action->execute(
             Provider::PROVIDER1,
             'P1_001',
             ['employeeId' => 'P1_001', 'firstName' => 'John']
         );
+
+        $this->assertEquals(SyncStatus::FAILED, $result->sync_status);
+        $this->assertStringContainsString('missing employeeId', $result->error_message);
     }
 
     public function test_validates_employee_id_exists_in_response(): void
@@ -67,16 +67,14 @@ class ResponseValidationTest extends TestCase
 
         $action = new CreateEmployeeInTrackTikAction($mockService);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('invalid response format');
-
-        $action->execute(
+        $result = $action->execute(
             Provider::PROVIDER1,
             'P1_999',
             ['employeeId' => 'P1_999', 'firstName' => 'Test']
         );
 
-        // Note: We can't check the database record here because the transaction
-        // is rolled back when an exception is thrown. The error is logged instead.
+        $this->assertEquals(SyncStatus::FAILED, $result->sync_status);
+        $this->assertNotNull($result->error_message);
+        $this->assertStringContainsString('invalid response format', $result->error_message);
     }
 }

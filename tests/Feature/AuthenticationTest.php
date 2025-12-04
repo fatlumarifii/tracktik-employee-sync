@@ -88,6 +88,6 @@ class AuthenticationTest extends TestCase
                 'email_address' => 'john@example.com',
             ]);
 
-        $response->assertStatus(201);
+        $response->assertStatus(200);
     }
 }

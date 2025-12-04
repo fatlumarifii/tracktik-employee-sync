@@ -68,8 +68,6 @@ class CreateEmployeeInTrackTikAction
                     'provider_employee_id' => $providerEmployeeId,
                     'tracktik_employee_id' => $trackTikEmployeeId,
                 ]);
-
-                return $employeeSync->fresh();
             } catch (\Exception $e) {
                 Log::error('Failed to create employee in TrackTik', [
                     'provider' => $provider->value,
@@ -81,9 +79,9 @@ class CreateEmployeeInTrackTikAction
                     'sync_status' => SyncStatus::FAILED,
                     'error_message' => $e->getMessage(),
                 ]);
-
-                throw $e;
             }
+
+            return $employeeSync->fresh();
         });
     }
 }

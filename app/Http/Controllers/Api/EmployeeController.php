@@ -21,51 +21,38 @@ class EmployeeController extends ApiController
 
     public function syncProvider1(Provider1EmployeeRequest $request): JsonResponse
     {
-        try {
-            $mappedData = $this->mapProvider1Action->execute($request->validated());
+        $mappedData = $this->mapProvider1Action->execute($request->validated());
 
-            $employeeSync = $this->createEmployeeAction->execute(
-                Provider::PROVIDER1,
-                $request->validated('emp_id'),
-                $mappedData
-            );
+        $employeeSync = $this->createEmployeeAction->execute(
+            Provider::PROVIDER1,
+            $request->validated('emp_id'),
+            $mappedData
+        );
 
-            return $this->jsonResponse(
-                message: 'Employee synced successfully',
-                data: new EmployeeSyncResource($employeeSync),
-                statusCode: 201
-            );
-        } catch (\Exception $e) {
-            return $this->jsonResponse(
-                message: 'Failed to sync employee',
-                error: $e->getMessage(),
-                statusCode: 500
-            );
-        }
+        return $this->jsonResponse(
+            message: $employeeSync->sync_status->value === 'success'
+                ? 'Employee synced successfully'
+                : 'Employee sync recorded but TrackTik sync failed',
+            data: new EmployeeSyncResource($employeeSync),
+            statusCode: 200
+        );
     }
 
     public function syncProvider2(Provider2EmployeeRequest $request): JsonResponse
     {
-        try {
-            $mappedData = $this->mapProvider2Action->execute($request->validated());
+        $mappedData = $this->mapProvider2Action->execute($request->validated());
 
-            $employeeSync = $this->createEmployeeAction->execute(
-                Provider::PROVIDER2,
-                $request->validated('employee_number'),
-                $mappedData
-            );
+        $employeeSync = $this->createEmployeeAction->execute(
+            Provider::PROVIDER2,
+            $request->validated('employee_number'),
+            $mappedData
+        );
 
-            return $this->jsonResponse(
-                message: 'Employee synced successfully',
-                data: new EmployeeSyncResource($employeeSync),
-                statusCode: 201
-            );
-        } catch (\Exception $e) {
-            return $this->jsonResponse(
-                message: 'Failed to sync employee',
-                error: $e->getMessage(),
-                statusCode: 500
-            );
-        }
+        return $this->jsonResponse(
+            message: $employeeSync->sync_status->value === 'success'
+                ? 'Employee synced successfully'
+                : 'Employee sync recorded but TrackTik sync failed',
+            data: new EmployeeSyncResource($employeeSync),
+        );
     }
 }

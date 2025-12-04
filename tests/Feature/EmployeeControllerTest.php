@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Actions\Employees\CreateEmployeeInTrackTikAction;
 use App\Enums\Provider;
 use App\Enums\SyncStatus;
-use App\Exceptions\TrackTikApiException;
 use App\Models\EmployeeSync;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
@@ -62,7 +61,7 @@ class EmployeeControllerTest extends TestCase
                 'employment_status' => 'active',
             ]);
 
-        $response->assertStatus(201)
+        $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
                 'message' => 'Employee synced successfully',
@@ -116,7 +115,7 @@ class EmployeeControllerTest extends TestCase
                 ],
             ]);
 
-        $response->assertStatus(201)
+        $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
                 'message' => 'Employee synced successfully',
@@ -169,9 +168,19 @@ class EmployeeControllerTest extends TestCase
         $mockAction = Mockery::mock(CreateEmployeeInTrackTikAction::class);
         $this->app->instance(CreateEmployeeInTrackTikAction::class, $mockAction);
 
+        $employeeSync = new EmployeeSync([
+            'id' => 1,
+            'provider' => Provider::PROVIDER1,
+            'provider_employee_id' => 'P1_001',
+            'tracktik_employee_id' => null,
+            'sync_status' => SyncStatus::FAILED,
+            'error_message' => 'Failed to create employee in TrackTik',
+        ]);
+        $employeeSync->exists = true;
+
         $mockAction->shouldReceive('execute')
             ->once()
-            ->andThrow(new TrackTikApiException('TrackTik API is unavailable'));
+            ->andReturn($employeeSync);
 
         $response = $this->withToken('test_provider1_token')
             ->postJson('/api/v1/employees/provider1', [
@@ -181,11 +190,15 @@ class EmployeeControllerTest extends TestCase
                 'email_address' => 'john.doe@example.com',
             ]);
 
-        $response->assertStatus(500)
+        $response->assertStatus(200)
             ->assertJson([
-                'success' => false,
-                'message' => 'Failed to sync employee',
-                'error' => 'TrackTik API is unavailable',
+                'success' => true,
+                'message' => 'Employee sync recorded but TrackTik sync failed',
+                'data' => [
+                    'provider' => 'provider1',
+                    'provider_employee_id' => 'P1_001',
+                    'sync_status' => 'failed',
+                ],
             ]);
     }
 
@@ -194,9 +207,19 @@ class EmployeeControllerTest extends TestCase
         $mockAction = Mockery::mock(CreateEmployeeInTrackTikAction::class);
         $this->app->instance(CreateEmployeeInTrackTikAction::class, $mockAction);
 
+        $employeeSync = new EmployeeSync([
+            'id' => 2,
+            'provider' => Provider::PROVIDER2,
+            'provider_employee_id' => 'P2_001',
+            'tracktik_employee_id' => null,
+            'sync_status' => SyncStatus::FAILED,
+            'error_message' => 'Failed to create employee in TrackTik',
+        ]);
+        $employeeSync->exists = true;
+
         $mockAction->shouldReceive('execute')
             ->once()
-            ->andThrow(new \Exception('Database connection failed'));
+            ->andReturn($employeeSync);
 
         $response = $this->withToken('test_provider2_token')
             ->postJson('/api/v1/employees/provider2', [
@@ -211,11 +234,15 @@ class EmployeeControllerTest extends TestCase
                 ],
             ]);
 
-        $response->assertStatus(500)
+        $response->assertStatus(200)
             ->assertJson([
-                'success' => false,
-                'message' => 'Failed to sync employee',
-                'error' => 'Database connection failed',
+                'success' => true,
+                'message' => 'Employee sync recorded but TrackTik sync failed',
+                'data' => [
+                    'provider' => 'provider2',
+                    'provider_employee_id' => 'P2_001',
+                    'sync_status' => 'failed',
+                ],
             ]);
     }
 
@@ -241,7 +268,7 @@ class EmployeeControllerTest extends TestCase
                 'email_address' => 'jane.smith@example.com',
             ]);
 
-        $response->assertStatus(201)
+        $response->assertStatus(200)
             ->assertJson(['success' => true]);
     }
 }
